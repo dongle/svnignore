@@ -1,31 +1,29 @@
 #!/usr/bin/env python
 """
-SVNIGNORE
+= SVNIGNORE
 by Jonathan Beilin (github: dongle)
 A script to allow the usage of a git-like .svnignore file in the root of the
 working copy.
 
-USAGE
+== USAGE
 $ svnignore CMD
 
-EXAMPLES
+== EXAMPLES
 $ svnignore update
 $ svnignore commit -m "boblog"
 
-.SVNIGNORE EXAMPLE (list files, one per line)
+== .SVNIGNORE EXAMPLE (list files, one per line)
 Array.h
 Array.inl
 *.png
 
-TODO
+== TODO
 - add README.md for github
 - get more immediate stdout output
 - bundle?
 - add --ignore option to define files to ignore on the fly
-- add makechangelist command to only make changelist
-- add removechangelist command to only remove changelist
 
-THANKS
+== THANKS
 - Rich Jones (github: miserlou) for code review
 - Ignacio Castano for inspiration
 """
@@ -40,11 +38,15 @@ import fnmatch
 ## CONFIG
 ##
 
+DEBUG = False
 dotfile_name = '.svnignore'
 
 ##
 ## END CONFIG
 ##
+
+only_clear_list = False
+only_create_list = False
 
 def execute(command, env=None, ignore_errors=False):
   """
@@ -108,15 +110,24 @@ def find_root():
     
   return root
   
-def parse_args():
-  # want to strip everything from --ignore until next arg
-  # and add to separate array for ad-hoc ignores
-  # also check for makechangelist in which case it will only make changelist
-  pass
+def parse_args(args):
+  # TODO parse for --ignore TARGETS to add to exclude list...
+  
+  global only_create_list
+  global only_clear_list
+  
+  args_string = ''.join(args)
+  
+  if (args_string.find('createlist') != -1):
+    only_create_list = True
+  elif (args_string.find('clearlist') != -1):
+    only_clear_list = True
 
 def main():
   args = sys.argv[1:]
   args += shlex.split("--cl svnignore")
+  
+  parse_args(args)
   
   wc_rootpath = find_root()
   
@@ -124,14 +135,16 @@ def main():
   
   clear_changelist(wc_rootpath)
   
-  create_changelist()
+  if not only_clear_list:
+    create_changelist()
   
-  filter_changelist(excludes_list)
+  if not (only_clear_list or only_create_list):
+    filter_changelist(excludes_list)
   
-  print 'executing command'
-  data = execute(['svn'] + args, env = {'LANG': 'en_US.UTF-8'})
+    print 'executing command'
+    data = execute(['svn'] + args, env = {'LANG': 'en_US.UTF-8'})
 
-  print data
+    print data
 
 if __name__ == '__main__':
   main()
