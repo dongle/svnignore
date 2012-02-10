@@ -18,8 +18,12 @@ Array.inl
 *.png
 
 TODO
+- add README.md for github
+- get more immediate stdout output
+- bundle?
 - add --ignore option to define files to ignore on the fly
 - add makechangelist command to only make changelist
+- add removechangelist command to only remove changelist
 
 THANKS
 - Rich Jones (github: miserlou) for code review
@@ -70,15 +74,17 @@ def execute(command, env=None, ignore_errors=False):
   return data
 
 def clear_changelist(wc_rootpath):
+  print 'clearing old changelist'
   args = shlex.split('changelist --remove --cl svnignore --depth infinity ' + wc_rootpath + ' -R')
   data = execute(['svn'] + args, env = {'LANG': 'en_US.UTF-8'})
   
 def create_changelist():
+  print 'making new changelist'
   args = shlex.split('changelist svnignore ' + '.' +  ' -R')
   data = execute(['svn'] + args, env = {'LANG': 'en_US.UTF-8'})
 
 def filter_changelist(excludes_list):
-    
+  print 'filtering changelist'
   # match items in exclude lists with paths; add to list of matches
   matches = []
   for root, dirnames, filenames in os.walk('.'):
@@ -122,6 +128,7 @@ def main():
   
   filter_changelist(excludes_list)
   
+  print 'executing command'
   data = execute(['svn'] + args, env = {'LANG': 'en_US.UTF-8'})
 
   print data
